@@ -1,0 +1,71 @@
+INTERFACES:
+
+   CATALOG
+   -------
+      ... [READ INVENTORY] ...
+         "each product is displayed with its
+          name, description, picture, price and available quantity"
+      ... [write cart_list(column: part_num, column: quant)] ...
+         "allows them to select products from a catalog"
+         "the customer can order products with diﬀering quantities"
+
+   CART
+   ____
+      ... [read cart_list] ...
+      ... [READ EXTRA_CHARGE] ...
+      --> [write summary_tuple(weight, shipping, handling, charge_total)]
+         "the system computes the total price,
+          adds shipping and handling charge"
+
+   ORDER 
+   -----
+      ... [read summary_tuple] (to display it) ...
+      ... [write personal_tuple(blah)] ...
+      ... [write cc_tuple(blah)] ...
+         "customers then provide their
+          name, email, mailing address and credit card information"
+      --> if (auth num good from CC)
+             [CREATE, READ, UPDATE CUSTOMER] --> [CREATE ORDER] ...
+
+   CC:=CREDIT CARD(third party interface)
+   --------------------------------------
+      [read cc_tuple] 
+         "credit card authorization is done via an interface to a credit card
+          processing system which requires the credit card number, expiration date
+          and purchase amount..."
+
+   ORDER LIST 
+   ----------
+      ... [READ ORDER] --> [READ, UPDATE, DELETE INVENTORY] ...
+         "a second interface to the new system will run on workstations in the
+          warehouse there workers can print packing lists for completed orders,
+          retrieve the items from the warehouse, package them up, add an invoice
+          and shipping label"
+      ... [UPDATE ORDER] ...
+         "successful packing and shipping completes the order and is recorded in
+          the order status"
+
+   RECEIVING
+   ---------
+      ... [CREATE, READ, UPDATE INVENTORY] ...
+         "A third interface also runs in the warehouse, at the receiving desk.
+          Whenever products are delivered they are added to the inventory"
+         "their quantity on hand is updated"
+      ... [READ PARTS] ...
+         "they can be recognized by their description or part number"
+
+   ADMINISTRATIVE
+   --------------
+      ... [CRUD EXTRA_CHARGE] ...
+         "Shipping and handling charges are based on the weight of a complete
+          order. This interface allows to set the weight brackets and their
+          charges."
+      ... [READ ORDER] ...
+         "as well as view all orders"
+         "Orders can be searched based on date range, status (authorized, shipped)
+          or prize range. The complete order detail is displayed for a selected
+          order."
+
+   LOGIN
+   _____
+      ... [READ ACCOUNT] ...
