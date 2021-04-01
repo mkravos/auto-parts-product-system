@@ -38,8 +38,7 @@ router.post("/create", (req, res) => {
   const quantity = req.body.quantity;
 
   db.query(
-    "INSERT INTO part_collection (part_collection_id, order_id, number, quantity)
-    VALUES (?,?,?,?)",
+    "INSERT INTO part_collection (part_collection_id, order_id, number, quantity) VALUES (?,?,?,?)",
     [id, order_id, number, quantity],
     (err, result) => {
       if (err) {
