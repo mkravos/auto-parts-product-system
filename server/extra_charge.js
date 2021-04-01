@@ -52,32 +52,17 @@ router.put("extra_charge/update", (req, res) => {
   const shipping = req.body.shipping;
   const handling = req.body.handling;
 
-  if(shipping != null){
-    db.query(
-      "UPDATE extra_charge SET shipping = ? WHERE weight = ?",
-      [shipping, handling, weight],
-      (err, result) => {
-        if (err) {
-          console.log(err);
-        } else {
-          res.send(result);
-        }
+  db.query(
+    "UPDATE extra_charge SET shipping = ?, handling = ? WHERE weight = ?",
+    [shipping, handling, weight],
+    (err, result) => {
+      if (err) {
+        console.log(err);
+      } else {
+        res.send(result);
       }
-    );
-  }
-  if(handling != null){
-    db.query(
-      "UPDATE extra_charge SET handling = ? WHERE weight = ?",
-      [handling, weight],
-      (err, result) => {
-        if (err) {
-          console.log(err);
-        } else {
-          res.send(result);
-        }
-      }
-    );
-  }
+    }
+  );
 });
 
 router.delete("extra_charge/delete/:weight", (req, res) => {
