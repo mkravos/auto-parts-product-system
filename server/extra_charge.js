@@ -7,7 +7,7 @@ const db 	= require('./db');
 router.use(express.json());
 router.use(cors());
 
-router.get('extra_charge/all', (req, res) => {
+router.get('/all', (req, res) => {
     db.query('SELECT * FROM extra_charge', (err, result) => {
       if (err) {
         console.log(err);
@@ -17,7 +17,7 @@ router.get('extra_charge/all', (req, res) => {
     });
 });
 
-router.get('extra_charge/select/:weight', (req, res) => {
+router.get('/select/:weight', (req, res) => {
     db.query('SELECT * FROM extra_charge WHERE weight = ?',
     [weight],
     (err, result) => {
@@ -29,7 +29,7 @@ router.get('extra_charge/select/:weight', (req, res) => {
     });
 });
 
-router.post("extra_charge/create", (req, res) => {
+router.post("/create", (req, res) => {
   const weight	 = req.body.weight;
   const shipping = req.body.shipping;
   const handling = req.body.handling;
@@ -47,7 +47,7 @@ router.post("extra_charge/create", (req, res) => {
   );
 });
 
-router.put("extra_charge/update", (req, res) => {
+router.put("/update", (req, res) => {
   const weight	 = req.body.weight;
   const shipping = req.body.shipping;
   const handling = req.body.handling;
@@ -65,7 +65,7 @@ router.put("extra_charge/update", (req, res) => {
   );
 });
 
-router.delete("extra_charge/delete/:weight", (req, res) => {
+router.delete("/delete/:weight", (req, res) => {
   const weight = req.params.weight;
 
   db.query(
