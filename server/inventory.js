@@ -31,4 +31,61 @@ router.get('/:number', (req, res) => {
     });
 });
 
+router.post("/create", (req, res) => {
+  const number	 = req.body.number;
+  const quantity = req.body.quantity;
+
+  db.query(
+    "INSERT INTO inventory (number, quantity) VALUES (?,?)",
+    [number, quantity],
+    (err, result) => {
+      if (err) {
+        console.log(err);
+      } else {
+        res.send("inventory table - inserted row");
+      }
+    }
+  );
+});
+
+router.put("/update", (req, res) => {
+  const number	 = req.body.number;
+  const quantity = req.body.quantity;
+ 
+  if (!req.body.number) {
+    return res.status(400).json({
+      status: 'error',
+      error: 'req body cannot be empty',
+    });
+  }
+    
+  db.query(
+    "UPDATE inventory SET quantity = ? WHERE number = ?",
+    [number, quantity],
+    (err, result) => {
+      if (err) {
+        console.log(err);
+      } else {
+        res.send(result);
+      }
+    }
+  );
+});
+
+router.delete("/delete/:number", (req, res) => {
+  const number	 = req.params.number;
+
+  db.query(
+    "DELETE FROM inventory WHERE number = ?",
+    number,
+    (err, result) => {
+      if (err) {
+        console.log(err);
+      } else {
+        res.send(result);
+      }
+    }
+  );
+});
+
 module.exports = router;
