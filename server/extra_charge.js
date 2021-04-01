@@ -18,6 +18,8 @@ router.get('/all', (req, res) => {
 });
 
 router.get('/select/:weight', (req, res) => {
+    const weight = req.params.weight;
+    
     db.query('SELECT * FROM extra_charge WHERE weight = ?',
     [weight],
     (err, result) => {
@@ -51,7 +53,14 @@ router.put("/update", (req, res) => {
   const weight	 = req.body.weight;
   const shipping = req.body.shipping;
   const handling = req.body.handling;
-
+ 
+  if (!req.body.weight) {
+    return res.status(400).json({
+      status: 'error',
+      error: 'req body cannot be empty',
+    });
+  }
+    
   db.query(
     "UPDATE extra_charge SET shipping = ?, handling = ? WHERE weight = ?",
     [shipping, handling, weight],
