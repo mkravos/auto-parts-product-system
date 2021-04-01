@@ -55,45 +55,17 @@ router.put("part_collection/update", (req, res) => {
   const number   = req.body.number;
   const quantity = req.body.quantity;
 
-  if(order_id != null){
-    db.query(
-      "UPDATE part_collection SET order_id = ? WHERE part_collection_id = ?",
-      [order_id, id],
-      (err, result) => {
-        if (err) {
-          console.log(err);
-        } else {
-          res.send(result);
-        }
+  db.query(
+    "UPDATE part_collection SET order_id = ?, number = ?, quantity = ? WHERE part_collection_id = ?",
+    [order_id, number, quantity, id],
+    (err, result) => {
+      if (err) {
+        console.log(err);
+      } else {
+        res.send(result);
       }
-    );
-  }
-  if(number != null){
-    db.query(
-      "UPDATE part_collection SET number = ? WHERE part_collection_id = ?",
-      [number, id],
-      (err, result) => {
-        if (err) {
-          console.log(err);
-        } else {
-          res.send(result);
-        }
-      }
-    );
-  }
-  if(quantity != null){
-    db.query(
-      "UPDATE part_collection SET quantity = ? WHERE part_collection_id = ?",
-      [quantity, id],
-      (err, result) => {
-        if (err) {
-          console.log(err);
-        } else {
-          res.send(result);
-        }
-      }
-    );
-  }
+    }
+  );
 });
 
 router.delete("part_collection/delete/:weight", (req, res) => {
