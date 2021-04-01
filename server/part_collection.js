@@ -18,6 +18,8 @@ router.get('/all', (req, res) => {
 });
 
 router.get('/select/:part_collection_id', (req, res) => {
+    const part_collection_id = req.params.part_collection_id;
+    
     db.query('SELECT * FROM part_collection WHERE part_collection_id = ?',
     [part_collection_id],
     (err, result) => {
@@ -54,6 +56,13 @@ router.put("/update", (req, res) => {
   const order_id = req.body.order_id;
   const number   = req.body.number;
   const quantity = req.body.quantity;
+    
+  if (!req.body.part_collection_id) {
+    return res.status(400).json({
+      status: 'error',
+      error: 'req body cannot be empty',
+    });
+  }
 
   db.query(
     "UPDATE part_collection SET order_id = ?, number = ?, quantity = ? WHERE part_collection_id = ?",
