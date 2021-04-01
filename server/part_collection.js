@@ -7,7 +7,7 @@ const db 	= require('./db');
 router.use(express.json());
 router.use(cors());
 
-router.get('part_collection/all', (req, res) => {
+router.get('/all', (req, res) => {
     db.query('SELECT * FROM part_collection', (err, result) => {
       if (err) {
         console.log(err);
@@ -17,7 +17,7 @@ router.get('part_collection/all', (req, res) => {
     });
 });
 
-router.get('part_collection/select/:part_collection_id', (req, res) => {
+router.get('/select/:part_collection_id', (req, res) => {
     db.query('SELECT * FROM part_collection WHERE part_collection_id = ?',
     [part_collection_id],
     (err, result) => {
@@ -29,7 +29,7 @@ router.get('part_collection/select/:part_collection_id', (req, res) => {
     });
 });
 
-router.post("part_collection/create", (req, res) => {
+router.post("/create", (req, res) => {
   const id       = req.body.part_collection_id;
   const order_id = req.body.order_id;
   const number   = req.body.number;
@@ -49,7 +49,7 @@ router.post("part_collection/create", (req, res) => {
   );
 });
 
-router.put("part_collection/update", (req, res) => {
+router.put("/update", (req, res) => {
   const id       = req.body.part_collection_id;
   const order_id = req.body.order_id;
   const number   = req.body.number;
@@ -68,7 +68,7 @@ router.put("part_collection/update", (req, res) => {
   );
 });
 
-router.delete("part_collection/delete/:weight", (req, res) => {
+router.delete("/delete/:weight", (req, res) => {
   const id = req.params.part_collection_id;
 
   db.query(
