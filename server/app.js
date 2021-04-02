@@ -1,13 +1,20 @@
 const express = require('express');
+const bodyParser = require('body-parser');
+const cors = require('cors');
 
-// This is where we require all of our files
-const inventory = require('./inventory');
+const account = require('./login/account');
+const position = require('./login/position');
+const position_collection = require('./login/position_collection');
 
 const app = express();
+app.use(bodyParser.json());
+app.use(express.json());
+app.use(cors());
 
-// We establish connection to the path
-app.use('/inventory', inventory);
+app.use('/login/account', account);
+app.use('/login/position', position);
+app.use('/login/position_collection', position_collection);
 
 app.listen('3000', () => {
-    console.log('Server started on port 3000');
+   console.log('Server started on port 3000');
 });
