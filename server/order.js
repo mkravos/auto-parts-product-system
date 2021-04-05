@@ -1,13 +1,13 @@
 const express = require("express");
 const cors = require("cors");
 const router = express.Router()
-const db = require('./db');
+const db = require('./customer_interaction_db');
 
 // We need these for the request, response
 router.use(express.json());
 router.use(cors());
 
-router.post("order/create", (req, res) => {
+router.post("/create", (req, res) => {
   const id = req.body.id;
   const customer_id = req.body.customer_id;
   const weight = req.body.weight;
@@ -18,7 +18,7 @@ router.post("order/create", (req, res) => {
   const status = req.body.status;
 
   db.query(
-    "INSERT INTO order (order_id, customer_id, weight, shipping, handling, charge_total, order_date, status) VALUES (?,?,?,?,?,?,?,?)",
+    "INSERT INTO `order` (order_id, customer_id, weight, shipping, handling, charge_total, order_date, status) VALUES (?,?,?,?,?,?,?,?)",
     [id, customer_id, weight, shipping, handling, charge_total, order_date, status],
     (err, result) => {
       if (err) {
@@ -30,8 +30,8 @@ router.post("order/create", (req, res) => {
   );
 });
 
-router.get("order/search", (req, res) => {
-  db.query("SELECT * FROM order", (err, result) => {
+router.get("/all", (req, res) => {
+  db.query("SELECT * FROM `order`", (err, result) => {
     if (err) {
       console.log(err);
     } else {
@@ -40,10 +40,10 @@ router.get("order/search", (req, res) => {
   });
 });
 
-router.get("order/search/:id", (req, res) => {
+router.get("/select/:id", (req, res) => {
   const id = req.params.id;
 
-  db.query("SELECT * FROM order WHERE order_id = ?", id, (err, result) => {
+  db.query("SELECT * FROM `order` WHERE order_id = ?", id, (err, result) => {
     if (err) {
       console.log(err);
     } else {
@@ -52,7 +52,7 @@ router.get("order/search/:id", (req, res) => {
   });
 });
 
-router.put("order/update", (req, res) => {
+router.put("/update", (req, res) => {
   const id = req.body.id;
   const customer_id = req.body.customer_id;
   const weight = req.body.weight;
@@ -64,7 +64,7 @@ router.put("order/update", (req, res) => {
 
   if (customer_id != null) {
     db.query(
-      "UPDATE order SET customer_id = ?, weight = ?, shipping = ?, handling = ?, charge_total = ?, order_date = ?, status = ? WHERE order_id = ?",
+      "UPDATE `order` SET customer_id = ?, weight = ?, shipping = ?, handling = ?, charge_total = ?, order_date = ?, status = ? WHERE order_id = ?",
       [customer_id, weight, shipping, handling, charge_total, order_date, status, id],
       (err, result) => {
         if (err) {
@@ -77,10 +77,10 @@ router.put("order/update", (req, res) => {
   }
 });
 
-router.delete("order/delete/:id", (req, res) => {
+router.delete("/delete/:id", (req, res) => {
   const id = req.params.id;
 
-  db.query("DELETE FROM order WHERE order_id = ?", id, (err, result) => {
+  db.query("DELETE FROM `order` WHERE order_id = ?", id, (err, result) => {
     if (err) {
       console.log(err);
     } else {

@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const router = express.Router();
-const db = require('../login');
+const db = require('../login_db');
 
 router.use(express.json());
 router.use(cors());
@@ -25,7 +25,7 @@ router.post("/create", (req, res) => {
    );
 });
 
-router.get("/search", (req, res) => {
+router.get("/all", (req, res) => {
    db.query(
       "SELECT * FROM position", (err, result) => {
       if (err) {
@@ -36,7 +36,7 @@ router.get("/search", (req, res) => {
    });
 });
 
-router.get("/search/:id", (req, res) => {
+router.get("/select/:id", (req, res) => {
    const id = req.params.id;
    db.query(
       "SELECT * FROM position WHERE position_id = ?",

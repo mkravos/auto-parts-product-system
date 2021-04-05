@@ -1,13 +1,13 @@
 const express = require("express");
 const cors = require("cors");
 const router = express.Router()
-const db = require('./db');
+const db = require('./customer_interaction_db');
 
 // We need these for the request, response
 router.use(express.json());
 router.use(cors());
 
-router.post("customer/create", (req, res) => {
+router.post("/create", (req, res) => {
   const id = req.body.id;
   const email = req.body.email;
   const first_name = req.body.first_name;
@@ -27,7 +27,7 @@ router.post("customer/create", (req, res) => {
   );
 });
 
-router.get("customer/search", (req, res) => {
+router.get("/all", (req, res) => {
   db.query("SELECT * FROM customer", (err, result) => {
     if (err) {
       console.log(err);
@@ -37,7 +37,7 @@ router.get("customer/search", (req, res) => {
   });
 });
 
-router.get("customer/search/:id", (req, res) => {
+router.get("/select/:id", (req, res) => {
   const id = req.params.id;
 
   db.query("SELECT * FROM customer WHERE customer_id = ?", id, (err, result) => {
@@ -49,7 +49,7 @@ router.get("customer/search/:id", (req, res) => {
   });
 });
 
-router.put("customer/update", (req, res) => {
+router.put("/update", (req, res) => {
   const id = req.body.id;
   const email = req.body.email;
   const first_name = req.body.first_name;
@@ -71,7 +71,7 @@ router.put("customer/update", (req, res) => {
   }
 });
 
-router.delete("customer/delete/:id", (req, res) => {
+router.delete("/delete/:id", (req, res) => {
   const id = req.params.id;
 
   db.query("DELETE FROM customer WHERE customer_id = ?", id, (err, result) => {
