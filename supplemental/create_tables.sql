@@ -1,6 +1,6 @@
 -- SQL DDL
-CREATE DATABASE IF NOT EXISTS customer_interaction;
-USE customer_interaction;
+CREATE DATABASE IF NOT EXISTS customer_interaction_db;
+USE customer_interaction_db;
 
 CREATE TABLE IF NOT EXISTS inventory (
    number   INT NOT NULL PRIMARY KEY,
@@ -44,8 +44,8 @@ CREATE TABLE IF NOT EXISTS extra_charge (
    PRIMARY KEY(weight)
 );
   
-CREATE DATABASE IF NOT EXISTS login;
-USE login;
+CREATE DATABASE IF NOT EXISTS login_db;
+USE login_db;
 
 CREATE TABLE IF NOT EXISTS account (
    account_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,

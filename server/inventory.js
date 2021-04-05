@@ -1,7 +1,7 @@
 const express = require('express')
 const cors = require('cors');
 const router = express.Router()
-const db = require('./db');
+const db = require('./customer_interaction_db');
 
 // We need these for the request, response
 router.use(express.json());
@@ -17,7 +17,7 @@ router.get('/all', (req, res) => {
     });
 });
 
-router.get('/:number', (req, res) => {
+router.get('/select/:number', (req, res) => {
     const number = req.params.number;
     db.query('SELECT * FROM inventory WHERE number = ?', number, (err, result) => {
         if (err) 
