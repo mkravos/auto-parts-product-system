@@ -1,7 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const router = express.Router()
-const db = require('./customer_interaction_db');
+const db = require('../customer_interaction_db');
 
 // We need these for the request, response
 router.use(express.json());
