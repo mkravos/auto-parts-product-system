@@ -1,3 +1,6 @@
+CREATE DATABASE IF NOT EXISTS customer_interaction_db;
+USE customer_interaction_db;
+
 INSERT INTO `inventory` (`number`, `quantity`) VALUES
 (1, 1),
 (2, 1),
