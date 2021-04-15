@@ -53,7 +53,7 @@ router.get("/select/:id", (req, res) => {
 });
 
 router.put("/update", (req, res) => {
-  const id = req.body.id;
+  const id = req.body.order_id;
   const customer_id = req.body.customer_id;
   const weight = req.body.weight;
   const shipping = req.body.shipping;
