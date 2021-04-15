@@ -45,6 +45,7 @@ const tableIcons = {
     ArrowDownwardIcon: forwardRef((props, ref) => <ArrowDownwardIcon {...props} ref={ref} />)
 };
 
+// API to handle interacting and fetching data from server.
 const api = axios.create({baseURL: 'http://localhost:3000'});
 
 const Shipping = () => {
@@ -78,31 +79,15 @@ const Shipping = () => {
             })
     }, [])
 
+    // Function that handles updating a current order's status.
     const handleRowUpdate = (newData, oldData, resolve) => {
         // Validate input.
         let errorList = []
-        if(newData.customer_id === ""){
-            errorList.push("Please enter customer id.")
-        }
-        if(newData.weight === ""){
-            errorList.push("Please enter weight.")
-        }
-        if(newData.shipping === ""){
-            errorList.push("Please enter shipping cost.")
-        }
-        if(newData.handling === ""){
-            errorList.push("Please enter handling cost.")
-        }
-        if(newData.charge_total === ""){
-            errorList.push("Please enter charge_total.")
-        }
-        if(newData.order_date === ""){
-            errorList.push("Please enter order_date.")
-        }
         if(newData.status === ""){
             errorList.push("Please enter order status.")
         }
 
+        // If no errors, proceed with updating order on database.
         if(errorList.length < 1){
             api.put('/customer_interaction/order/update', newData)
                 .then(res => {
@@ -125,52 +110,7 @@ const Shipping = () => {
         }
     }
 
-    const handleRowAdd = (newData, resolve) => {
-        // Validate input.
-        let errorList = []
-        if(newData.customer_id === ""){
-            errorList.push("Please enter customer id.")
-        }
-        if(newData.weight === ""){
-            errorList.push("Please enter weight.")
-        }
-        if(newData.shipping === ""){
-            errorList.push("Please enter shipping cost.")
-        }
-        if(newData.handling === ""){
-            errorList.push("Please enter handling cost.")
-        }
-        if(newData.charge_total === ""){
-            errorList.push("Please enter charge_total.")
-        }
-        if(newData.order_date === ""){
-            errorList.push("Please enter order_date.")
-        }
-        if(newData.status === ""){
-            errorList.push("Please enter order status.")
-        }
-
-        if(errorList.length < 1){
-            api.post("/customer_interaction/order/create", newData)
-                .then(res => {
-                    let dataToAdd = [...data];
-                    dataToAdd.push(newData);
-                    setData(dataToAdd);
-                    resolve()
-                    setErrorMessages([])
-                })
-                .catch(error => {
-                    setErrorMessages(["Cannot add data. Server error!"])
-                    resolve()
-                })
-        }
-        else{
-            setErrorMessages(errorList)
-            setIserror(true)
-            resolve()
-        }
-    }
-
+    // Function that handles deleting orders.
     const handleRowDelete = (oldData, resolve) => {
         api.delete("/customer_interaction/order/delete/"+oldData.order_id)
         .then(res => {
@@ -186,6 +126,7 @@ const Shipping = () => {
         })
     }
 
+    // Function that creates a .csv file containing the selected order that is automatically downloaded.
     const handleClick = (rowData) => {
         // Create string for .csv file.
         let text = '';
@@ -211,6 +152,7 @@ const Shipping = () => {
         element.click();
     }
 
+    // Generate output and display webpage.
     return (
         <main>
             <Navbar/>
@@ -236,10 +178,6 @@ const Shipping = () => {
                         onRowUpdate: (newData, oldData) =>
                         new Promise((resolve) => {
                             handleRowUpdate(newData, oldData, resolve);
-                        }),
-                        onRowAdd: (newData) =>
-                        new Promise((resolve) => {
-                            handleRowAdd(newData, resolve)
                         }),
                         onRowDelete: (oldData) =>
                         new Promise((resolve) => {
