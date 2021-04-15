@@ -60,8 +60,8 @@ router.put("/update", (req, res) => {
   }
     
   db.query(
-    "UPDATE inventory SET quantity = ? WHERE number = ?",
-    [number, quantity],
+    "UPDATE inventory SET quantity = quantity + ? WHERE number = ?",
+    [quantity, number],
     (err, result) => {
       if (err) {
         console.log(err);

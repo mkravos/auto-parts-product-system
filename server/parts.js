@@ -32,7 +32,8 @@ router.get('/all', (req, res) => {
 });
 
 router.get('/select/:number', (req, res) => {
-    const number = req.params.number;
+    const number = decodeURIComponent(req.params.number);
+    console.log(number)
     db.query('SELECT * FROM parts WHERE number = ?', number, (err, result) => {
         if (err) 
         {
@@ -43,6 +44,21 @@ router.get('/select/:number', (req, res) => {
             res.send(result);
         }
     });
+});
+
+router.get('/select/description/:description', (req, res) => {
+    const description = decodeURIComponent(req.params.description);
+    db.query(
+      'SELECT number FROM parts WHERE description = ?',
+       description,
+       (err, result) => {
+           if (err) {
+               console.log(err);
+           } else {
+               res.send(result);
+           }
+        }
+    );
 });
 
 module.exports = router;
