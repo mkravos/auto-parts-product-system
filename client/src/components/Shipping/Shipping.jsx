@@ -50,13 +50,13 @@ const api = axios.create({baseURL: 'http://localhost:3000'});
 const Shipping = () => {
     // Define columns.
     const columns = [
-        {title: "Order ID", field: "order_id", width: "1/4"},
-        {title: "Customer ID", field: "customer_id"},
-        {title: "Weight", field: "weight"},
-        {title: "Shipping", field: "shipping"},
-        {title: "Handling", field: "handling"},
-        {title: "Total Charge", field: "charge_total"},
-        {title: "Order Date", field: "order_date"},
+        {title: "Order ID", field: "order_id", width: "1/4", editable: 'never'},
+        {title: "Customer ID", field: "customer_id", editable: 'never'},
+        {title: "Weight", field: "weight", editable: 'never'},
+        {title: "Shipping", field: "shipping", editable: 'never'},
+        {title: "Handling", field: "handling", editable: 'never'},
+        {title: "Total Charge", field: "charge_total", editable: 'never'},
+        {title: "Order Date", field: "order_date", editable: 'never'},
         {title: "Status", field: "status"},
     ]
 
