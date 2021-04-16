@@ -32,8 +32,7 @@ router.get('/all', (req, res) => {
 });
 
 router.get('/select/:number', (req, res) => {
-    const number = decodeURIComponent(req.params.number);
-    console.log(number)
+    const number = req.params.number;
     db.query('SELECT * FROM parts WHERE number = ?', number, (err, result) => {
         if (err) 
         {
