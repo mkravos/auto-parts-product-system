@@ -17,15 +17,31 @@ const Products = () => {
     const PAGE_PRODUCTS = 'products';
     const PAGE_CART = 'cart';
     const PAGE_CHECKOUT = 'checkout';
+    const PAGE_ORDERCONFIRMED = 'orderconfirmed';
 
     const [cart, setCart] = useState([]);
     const [page, setPage] = useState(PAGE_PRODUCTS);
     const [productList, setProductList] = useState([]);
 
+    var formatter = new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+      
+        // These options are needed to round to whole numbers if that's what you want.
+        //minimumFractionDigits: 0, // (this suffices for whole numbers, but will print 2500.10 as $2,500.1)
+        //maximumFractionDigits: 0, // (causes 2500.99 to be printed as $2,501)
+    });
+
     const getProducts = () => {
         axios.get('http://localhost:3000/parts/all').then((response) => {
             setProductList(response.data);
         });
+    };
+
+    // process credit card, then clear the cart
+    const confirmTransaction = () => {
+        // do credit card stuff
+        setCart([]); // then clear cart
     };
 
     const addToCart = (product) => {
@@ -65,7 +81,7 @@ const Products = () => {
                                     {product.description}
                                 </Typography>
                                 <Typography variant="h5" gutterBottom>
-                                    {product.price}
+                                    ${product.price}
                                 </Typography>
                             </div>
                             <Typography variant="body2" color="textSecondary">
@@ -98,7 +114,7 @@ const Products = () => {
                                 {product.description}
                             </Typography>
                             <Typography variant="h5" gutterBottom>
-                                {product.price}
+                                ${product.price}
                             </Typography>
                         </div>
                         <Typography variant="body2" color="textSecondary">
@@ -115,35 +131,60 @@ const Products = () => {
             </Grid>
             ))}
         </Grid>
-        {cart.length === 0 && <><h1>Your cart is empty!</h1><br/><br/><br/></>}
-        <div style={{display: 'flex',  justifyContent:'center', alignItems:'center', height: '25vh'}}>
-            <h3>Total Cost: ${getCartTotal()}</h3>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-            <Button variant="outlined" color="primary" onClick={() => navigateTo(PAGE_CHECKOUT)}>
-                Checkout
-            </Button>
-        </div>
+        {cart.length === 0 && 
+            <>
+            <center><h1>Your cart is empty!</h1>
+            <Button variant="outlined" color="primary" onClick={() => navigateTo(PAGE_PRODUCTS)}>
+                Return to Catalog
+            </Button></center><br/><br/><br/>
+            </>
+        }
+        {cart.length !== 0 &&
+            <div style={{display: 'flex',  justifyContent:'center', alignItems:'center', height: '25vh'}}>
+                <h3>Total Price: {formatter.format(getCartTotal())}</h3>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                <Button variant="outlined" color="primary" onClick={() => navigateTo(PAGE_CHECKOUT)}>
+                    Checkout
+                </Button>
+            </div>
+        }
        </>
     )
 
     const renderCheckout = () => (
-        <div>
-            <div style={{justifyContent:'center', alignItems:'center'}}>
-                <h2>Please fill out the form completely</h2>
-                <form>
-                    <label>First Name:</label>
-                    <input type="text" /><br/><br/>
-                    <label>Last Name:</label>
-                    <input type="text" /><br/><br/>
-                    <label>Address:</label>
-                    <input type="text" /><br/><br/>
-                    <label>Other:</label>
-                    <input type="text" /><br/><br/>
-                    <h3>Card info - other fields</h3>
-                    <Button variant="outlined" color="primary">
-                        Submit
-                    </Button>
-                </form>
-            </div>
+        <div style={{justifyContent:'center', alignItems:'center'}}>
+            <center>
+            <h2>Please fill out the form completely:</h2>
+            <form>
+                <center><label>First Name:</label></center>
+                <input type="text" /><br/><br/>
+                <center><label>Last Name:</label></center>
+                <input type="text" /><br/><br/>
+                <center><label>Address:</label></center>
+                <input type="text" /><br/><br/>
+                <center><label>Email:</label></center>
+                <input type="text" /><br/><br/>
+                <center><label>Card Number:</label></center>
+                <input type="text" /><br/><br/>
+                <center><label>Card Exp Date (MM/YY):</label></center>
+                <input type="text" /><br/><br/>
+                <h3>Total Price: {formatter.format(getCartTotal())}</h3>
+                <Button variant="outlined" color="primary" onClick={() => navigateTo(PAGE_ORDERCONFIRMED)}>
+                    Confirm Purchase
+                </Button>
+            </form>
+            </center>
+        </div>
+    )
+
+    // this is where I'm thinking confirmTransaction should be called from in order to confirm the credit card details and finalize the order
+    const renderOrderConfirmed = () => (
+        <div style={{justifyContent:'center', alignItems:'center'}}>
+            <center>
+            <h2>Order Confirmed!</h2>
+            <Button variant="outlined" color="primary" onClick={() => navigateTo(PAGE_PRODUCTS)}>
+                Continue Shopping
+            </Button>
+            </center>
         </div>
     )
 
@@ -175,6 +216,7 @@ const Products = () => {
             {page === PAGE_CART && renderCart()}
             {page === PAGE_PRODUCTS && renderProducts()}
             {page === PAGE_CHECKOUT && renderCheckout()}
+            {page === PAGE_ORDERCONFIRMED && renderOrderConfirmed()}
         </main>
     )
 }
