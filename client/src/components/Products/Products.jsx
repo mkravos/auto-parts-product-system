@@ -141,7 +141,6 @@ const Products = () => {
             setOrderList(response.data);
         });
         let orderID = orderList.pop().order_id;
-        console.log(orderID);
         // Now, for each product in our order we must make an entry in the part_collection db.
         cart.map((product) => {
             let orderPartNum = product.number;
@@ -154,7 +153,7 @@ const Products = () => {
             });
             // PART COLLECTION
             api.post('customer_interaction/part_collection/create', {
-                order_id: 28,
+                order_id: orderID,
                 number: orderPartNum,
                 quantity: orderQuantity
             }).then((response) => {
