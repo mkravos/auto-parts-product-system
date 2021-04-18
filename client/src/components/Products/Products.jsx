@@ -1,17 +1,20 @@
-import React from 'react';
-import {useState} from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import axios from 'axios';
 import { AppBar, Toolbar, IconButton, Badge, MenuItem, Menu, Typography, Grid, Card, CardMedia, CardContent, CardActions } from '@material-ui/core';
 import { AddShoppingCart, DeleteForever } from '@material-ui/icons';
 import Button from '@material-ui/core/Button';
+import TextField from '@material-ui/core/TextField';
+
 
 import Product from './Product/Product';
-import useStyles from './styles';
+import useStyles from './Product/styles';
 
 import HomeIcon from '@material-ui/icons/Home';
 import { ShoppingCart } from '@material-ui/icons';
 
 import logo from '../../assets/Logo.png';
+
+const api = axios.create({baseURL: 'http://localhost:3000/'});
 
 const Products = () => {
     const PAGE_PRODUCTS = 'products';
@@ -22,6 +25,16 @@ const Products = () => {
     const [cart, setCart] = useState([]);
     const [page, setPage] = useState(PAGE_PRODUCTS);
     const [productList, setProductList] = useState([]);
+    const [customerList, setCustomerList] = useState([]);
+    const [weightList, setWeightList] = useState([]);
+    const [orderList, setOrderList] = useState([]);
+
+    let firstNameRef = useRef(null);
+    let lastNameRef = useRef(null);
+    let addressRef = useRef(null);
+    let emailRef = useRef(null);
+    let cardNumberRef = useRef(null);
+    let cardExpRef = useRef(null);
 
     var formatter = new Intl.NumberFormat('en-US', {
         style: 'currency',
@@ -43,6 +56,113 @@ const Products = () => {
         // do credit card stuff
         setCart([]); // then clear cart
     };
+
+    const processTransaction = () => {
+        // Input values for customer.
+        let firstName = firstNameRef.current.value;
+        let lastName = lastNameRef.current.value;
+        let address = addressRef.current.value;
+        let email = emailRef.current.value;
+
+        // Input values for credit card processing.
+        let cardNumber = cardNumberRef.current.value;
+        let cardExp = cardExpRef.current.value;
+
+        // CUSTOMER
+        api.post('customer_interaction/customer/create', {
+            email: email,
+            first_name: firstName,
+            last_name: lastName,
+            address: address
+        }).then((response) => {
+            console.log(response);
+        }).catch((error) => {
+            console.error(error);
+        });
+        // Generate values for order creation.
+        // For the customer, this will be wasteful and simply works as a needed solution.
+        // It does not check for duplicate customers, this simply uses the last created
+        // customer's ID to fulfill the order.
+        axios.get('http://localhost:3000/customer_interaction/customer/all').then((response) => {
+            setCustomerList(response.data);
+        });
+        let orderCustID = customerList.length+1;
+        // Now we begin by getting our weight.
+        let orderWeight = 0;
+        cart.map((product) => {
+            orderWeight += product.weight;
+        });
+        axios.get('http://localhost:3000/customer_interaction/extra_charge/all').then((response) => {
+            setWeightList(response.data);
+        });
+        // We now have all the weight 'brackets' defined in the database.
+        // From here we can skim over them all to find the 'bracket' that the weight
+        // of our order fits into.
+        let orderShipping = 0;
+        let orderHandling = 0;
+        for(let weight of weightList){
+            if(orderWeight >= weight){
+                orderShipping = weight.shipping;
+                orderHandling = weight.handling;
+            }
+        }
+        // Now we can determine the total price of the order.
+        // First, we calculate the raw cost of the order without shipping/handling.
+        let orderTotal = 0;
+        cart.map((product) => {
+            orderTotal += product.price;
+        });
+        // Now we can add shipping/handling costs.
+        orderTotal += orderShipping + orderHandling;
+
+        // Get current date.
+        // Can't figure out how to get in local timezone.
+        let date = new Date(); 
+
+        // ORDER
+        api.post('customer_interaction/order/create', {
+           customer_id : orderCustID,
+           weight: orderWeight,
+           shipping: orderShipping,
+           handling: orderHandling,
+           charge_total: orderTotal,
+           order_date: date,
+           status: 'Created'
+        }).then((response) => {
+           console.log(response);
+        }).catch((error) => {
+           console.error(error);
+        });
+
+        // Same with customer, in order to get the order ID we are using the method
+        // of selecting all orders and getting the length of the array.
+        // Inefficient, but it works.
+        axios.get('http://localhost:3000/customer_interaction/order/all').then((response) => {
+            setOrderList(response.data);
+        });
+        let orderID = orderList.length+1;
+        // Now, for each product in our order we must make an entry in the part_collection db.
+        cart.map((product) => {
+            let orderPartNum = product.number;
+            let orderQuantity = 0;
+            // Loop through to determine how many of a certain product was in the order.
+            cart.map((product) => {
+                if(product.number === orderPartNum){
+                    orderQuantity += 1;
+                }
+            });
+            // PART COLLECTION
+            api.post('customer_interaction/part_collection/create', {
+                order_id: orderID,
+                number: orderPartNum,
+                quantity: orderQuantity
+            }).then((response) => {
+                console.log(response);
+            }).catch((error) => {
+                console.error(error);
+            });
+        });
+    }
 
     const addToCart = (product) => {
         setCart([...cart, { ...product}]);
@@ -154,21 +274,38 @@ const Products = () => {
         <div style={{justifyContent:'center', alignItems:'center'}}>
             <center>
             <h2>Please fill out the form completely:</h2>
-            <form>
-                <center><label>First Name:</label></center>
-                <input type="text" /><br/><br/>
-                <center><label>Last Name:</label></center>
-                <input type="text" /><br/><br/>
-                <center><label>Address:</label></center>
-                <input type="text" /><br/><br/>
-                <center><label>Email:</label></center>
-                <input type="text" /><br/><br/>
-                <center><label>Card Number:</label></center>
-                <input type="text" /><br/><br/>
-                <center><label>Card Exp Date (MM/YY):</label></center>
-                <input type="text" /><br/><br/>
-                <h3>Total Price: {formatter.format(getCartTotal())}</h3>
-                <Button variant="outlined" color="primary" onClick={() => navigateTo(PAGE_ORDERCONFIRMED)}>
+            <form className={classes.form}>
+            <center><TextField
+                     label="First Name"
+                     defaultValue=""
+                     inputRef={firstNameRef}
+                     className={classes.textField} /></center>
+            <center><TextField
+                     label="Last Name"
+                     defaultValue=""
+                     inputRef={lastNameRef}
+                     className={classes.textField} /></center>
+            <center><TextField
+                     label="Address"
+                     defaultValue=""
+                     inputRef={addressRef}
+                     className={classes.textField} /></center>
+            <center><TextField
+                     label="Email"
+                     defaultValue=""
+                     inputRef={emailRef}
+                     className={classes.textField} /></center>
+            <center><TextField
+                     label="Card Number"
+                     defaultValue=""
+                     inputRef={cardNumberRef}
+                     className={classes.textField} /></center>
+            <center><TextField
+                     label="Card exp"
+                     defaultValue=""
+                     inputRef={cardExpRef}
+                     className={classes.textField} /></center>
+                <Button variant="outlined" color="primary" onClick={() => processTransaction()}>
                     Confirm Purchase
                 </Button>
             </form>
