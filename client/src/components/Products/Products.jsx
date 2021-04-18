@@ -53,6 +53,7 @@ const Products = () => {
 
     // process credit card, then clear the cart
     const confirmTransaction = (cardNum, cardExp, custName, orderAmount) => {
+        // Somehow we need vendor and trans to be unique.
         api.post('http://blitz.cs.niu.edu/CreditCard/', {
             vendor : 'VE001-99',
             trans : '907-987654321-296',
@@ -158,25 +159,30 @@ const Products = () => {
             });
             let orderID = orderList.pop().order_id;
             // Now, for each product in our order we must make an entry in the part_collection db.
+            let uniqueProducts = [];
             cart.map((product) => {
                 let orderPartNum = product.number;
-                let orderQuantity = 0;
-                // Loop through to determine how many of a certain product was in the order.
-                cart.map((product) => {
-                    if(product.number === orderPartNum){
-                        orderQuantity += 1;
-                    }
-                });
-                // PART COLLECTION
-                api.post('customer_interaction/part_collection/create', {
-                    order_id: orderID,
-                    number: orderPartNum,
-                    quantity: orderQuantity
-                }).then((response) => {
-                    console.log(response);
-                }).catch((error) => {
-                    console.error(error);
-                });
+                if(uniqueProducts.find(element => element === orderPartNum) === undefined){
+                    // If we don't find the same part num already in the array.
+                    uniqueProducts.push(orderPartNum);
+                    let orderQuantity = 0;
+                    // Loop through to determine how many of a certain product was in the order.
+                    cart.map((product) => {
+                        if(product.number === orderPartNum){
+                            orderQuantity += 1;
+                        }
+                    });
+                    // PART COLLECTION
+                    api.post('customer_interaction/part_collection/create', {
+                        order_id: orderID,
+                        number: orderPartNum,
+                        quantity: orderQuantity
+                    }).then((response) => {
+                        console.log(response);
+                    }).catch((error) => {
+                        console.error(error);
+                    });
+                }
             });
         }
         else{
