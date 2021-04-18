@@ -86,7 +86,7 @@ const Products = () => {
         axios.get('http://localhost:3000/customer_interaction/customer/all').then((response) => {
             setCustomerList(response.data);
         });
-        let orderCustID = customerList.length+1;
+        let orderCustID = customerList.pop().customer_id;
         // Now we begin by getting our weight.
         let orderWeight = 0;
         cart.map((product) => {
@@ -135,12 +135,13 @@ const Products = () => {
         });
 
         // Same with customer, in order to get the order ID we are using the method
-        // of selecting all orders and getting the length of the array.
+        // of selecting all orders and getting the id of the last order.
         // Inefficient, but it works.
         axios.get('http://localhost:3000/customer_interaction/order/all').then((response) => {
             setOrderList(response.data);
         });
-        let orderID = orderList.length+1;
+        let orderID = orderList.pop().order_id;
+        console.log(orderID);
         // Now, for each product in our order we must make an entry in the part_collection db.
         cart.map((product) => {
             let orderPartNum = product.number;
@@ -153,7 +154,7 @@ const Products = () => {
             });
             // PART COLLECTION
             api.post('customer_interaction/part_collection/create', {
-                order_id: orderID,
+                order_id: 28,
                 number: orderPartNum,
                 quantity: orderQuantity
             }).then((response) => {
