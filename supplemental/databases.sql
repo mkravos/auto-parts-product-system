@@ -1,8 +1,9 @@
-DROP DATABASE IF EXISTS csci467;
 DROP DATABASE IF EXISTS customer_interaction_db;
 DROP DATABASE IF EXISTS login_db;
 
 -- ---------------------------------------------------------------------------80
+/* for the heck of it
+DROP DATABASE IF EXISTS csci467;
 CREATE DATABASE IF NOT EXISTS csci467;
 USE csci467;
 
@@ -21,6 +22,7 @@ INSERT INTO parts (description, price, weight, pictureURL) VALUES
 ('Boeing X-32A JSF', 36.90, 2.00, 'http://blitz.cs.niu.edu/pics/air.jpg'),
 ('American Airlines: MD-11S', 40.83, 2.00, 'http://blitz.cs.niu.edu/pics/air.jpg'),
 ('1997 BMW F650 ST', 75.34, 3.50, 'http://blitz.cs.niu.edu/pics/mop.jpg');
+*/
 
 -- ---------------------------------------------------------------------------80
 CREATE DATABASE IF NOT EXISTS customer_interaction_db;
@@ -47,16 +49,39 @@ CREATE TABLE IF NOT EXISTS customer (
 );
 
 CREATE TABLE IF NOT EXISTS `order` (
-   order_id     INT PRIMARY KEY AUTO_INCREMENT,
-   customer_id  INT NOT NULL,
-   weight       DOUBLE(5, 2) NOT NULL,
-   shipping     DOUBLE(5, 2) NOT NULL, 
-   handling     DOUBLE(5, 2) NOT NULL, 
-   charge_total DOUBLE(5, 2) NOT NULL, 
-   order_date   TIMESTAMP NOT NULL,
-   status       CHAR(50) NOT NULL,
+   order_id       INT PRIMARY KEY AUTO_INCREMENT,
+   customer_id    INT NOT NULL,
+   weight         DOUBLE(5, 2) NOT NULL,
+   shipping       DOUBLE(5, 2) NOT NULL, 
+   handling       DOUBLE(5, 2) NOT NULL, 
+   charge_total   DOUBLE(5, 2) NOT NULL, 
+   order_date     TIMESTAMP NOT NULL,
+   status         CHAR(50) NOT NULL,
    FOREIGN KEY(customer_id) REFERENCES customer(customer_id)
 );
+/* transaction_id not supported by mariadb because rows are 
+   determined by data outside of table :(
+CREATE TABLE IF NOT EXISTS `order` (
+   order_id       INT PRIMARY KEY AUTO_INCREMENT,
+   transaction_id CHAR(17)
+   AS
+      (concat(
+         cast(floor(newid()*1000) as char),
+         '-',
+         cast(floor(newid()*1000000000) as char),
+         '-',
+         cast(floor(newid()*1000) as char)
+      ))
+   PERSISTENT,
+   customer_id    INT NOT NULL,
+   weight         DOUBLE(5, 2) NOT NULL,
+   shipping       DOUBLE(5, 2) NOT NULL, 
+   handling       DOUBLE(5, 2) NOT NULL, 
+   charge_total   DOUBLE(5, 2) NOT NULL, 
+   order_date     TIMESTAMP NOT NULL,
+   status         CHAR(50) NOT NULL,
+);
+*/
 
 CREATE TABLE IF NOT EXISTS part_collection (
    part_collection_id INT PRIMARY KEY AUTO_INCREMENT,
@@ -85,6 +110,7 @@ INSERT INTO customer
 ('ehatin@je.we', 'ehatin', 'je', '930821 je way'),
 ('ihxein@at.we', 'ihxein', 'at', '732181 at way');
 
+-- for the heck of it
 INSERT INTO `order`
 (customer_id, weight, shipping, handling, charge_total, order_date, status) VALUES
 (
@@ -170,3 +196,6 @@ DO
 END FOR;
 //
 DELIMITER ;
+
+-- this is the db we are working with
+USE customer_interaction_db;
