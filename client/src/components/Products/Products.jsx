@@ -52,8 +52,20 @@ const Products = () => {
     };
 
     // process credit card, then clear the cart
-    const confirmTransaction = () => {
-        // do credit card stuff
+    const confirmTransaction = (cardNum, cardExp, custName, orderAmount) => {
+        api.post('http://blitz.cs.niu.edu/CreditCard/', {
+            vendor : 'VE001-99',
+            trans : '907-987654321-296',
+            cc : cardNum,
+            name : custName, 
+            exp : cardExp, 
+            amount : orderAmount
+        }).then((response) => {
+            console.log(response);
+            return response.statusText;
+        }).catch((error) => {
+            console.error(error);
+        });
         setCart([]); // then clear cart
     };
 
@@ -115,53 +127,66 @@ const Products = () => {
         // Now we can add shipping/handling costs.
         orderTotal += orderShipping + orderHandling;
 
-        // Get current date.
-        // Can't figure out how to get in local timezone.
-        let date = new Date(); 
+        // Process cc transaction.
+        // If transaction doesn't go through, we can simply delete the latest customer.
+        let res = confirmTransaction(cardNumber, cardExp, firstName+' '+lastName, orderTotal);
+        if(res === 'OK'){
+            // Get current date.
+            // Can't figure out how to get in local timezone.
+            let date = new Date(); 
 
-        // ORDER
-        api.post('customer_interaction/order/create', {
-           customer_id : orderCustID,
-           weight: orderWeight,
-           shipping: orderShipping,
-           handling: orderHandling,
-           charge_total: orderTotal,
-           order_date: date,
-           status: 'Created'
-        }).then((response) => {
-           console.log(response);
-        }).catch((error) => {
-           console.error(error);
-        });
-
-        // Same with customer, in order to get the order ID we are using the method
-        // of selecting all orders and getting the id of the last order.
-        // Inefficient, but it works.
-        axios.get('http://localhost:3000/customer_interaction/order/all').then((response) => {
-            setOrderList(response.data);
-        });
-        let orderID = orderList.pop().order_id;
-        // Now, for each product in our order we must make an entry in the part_collection db.
-        cart.map((product) => {
-            let orderPartNum = product.number;
-            let orderQuantity = 0;
-            // Loop through to determine how many of a certain product was in the order.
-            cart.map((product) => {
-                if(product.number === orderPartNum){
-                    orderQuantity += 1;
-                }
-            });
-            // PART COLLECTION
-            api.post('customer_interaction/part_collection/create', {
-                order_id: orderID,
-                number: orderPartNum,
-                quantity: orderQuantity
+            // ORDER
+            api.post('customer_interaction/order/create', {
+                customer_id : orderCustID,
+                weight: orderWeight,
+                shipping: orderShipping,
+                handling: orderHandling,
+                charge_total: orderTotal,
+                order_date: date,
+                status: 'Created'
             }).then((response) => {
                 console.log(response);
             }).catch((error) => {
                 console.error(error);
             });
-        });
+
+            // Same with customer, in order to get the order ID we are using the method
+            // of selecting all orders and getting the id of the last order.
+            // Inefficient, but it works.
+            axios.get('http://localhost:3000/customer_interaction/order/all').then((response) => {
+                setOrderList(response.data);
+            });
+            let orderID = orderList.pop().order_id;
+            // Now, for each product in our order we must make an entry in the part_collection db.
+            cart.map((product) => {
+                let orderPartNum = product.number;
+                let orderQuantity = 0;
+                // Loop through to determine how many of a certain product was in the order.
+                cart.map((product) => {
+                    if(product.number === orderPartNum){
+                        orderQuantity += 1;
+                    }
+                });
+                // PART COLLECTION
+                api.post('customer_interaction/part_collection/create', {
+                    order_id: orderID,
+                    number: orderPartNum,
+                    quantity: orderQuantity
+                }).then((response) => {
+                    console.log(response);
+                }).catch((error) => {
+                    console.error(error);
+                });
+            });
+        }
+        else{
+            api.delete('customer_interaction/customer/delete/'+orderCustID)
+            .then((response) => {
+                console.log(response);
+            }).catch((error) => {
+                console.error(error);
+            });
+        }
     }
 
     const addToCart = (product) => {
