@@ -14,7 +14,14 @@ import { ShoppingCart } from '@material-ui/icons';
 
 import logo from '../../assets/Logo.png';
 
-const api = axios.create({baseURL: 'http://localhost:3000/'});
+const autoApi = axios.create({baseURL: 'http://localhost:3000/'});
+const blitzApi = axios.create({
+  baseURL: 'http://blitz.cs.niu.edu/',
+  headers: {
+    'Content-type': 'application/json',
+    'Accept': 'application/json'
+  }
+});
 
 const Products = () => {
     const PAGE_PRODUCTS = 'products';
@@ -46,31 +53,52 @@ const Products = () => {
     });
 
     const getProducts = () => {
-        axios.get('http://localhost:3000/parts/all').then((response) => {
-            setProductList(response.data);
-        });
+        autoApi.get('parts/all')
+         .then((response) => {
+                setProductList(response.data);
+         }).catch((error) => {
+             console.error(error);
+         });
     };
 
     // process credit card, then clear the cart
-    const confirmTransaction = (cardNum, cardExp, custName, orderAmount) => {
-        // Somehow we need vendor and trans to be unique.
-        api.post('http://blitz.cs.niu.edu/CreditCard/', {
+    // has to happen before we check what the status is
+    const confirmTransaction = async (cardNum, cardExp, custName, orderAmount) => {
+        let statusText = 'broken';
+        /*
+        blitzApi.post('CreditCard/', {
             vendor : 'VE001-99',
-            trans : '907-987654321-296',
+            trans : '907-927654321-296',
             cc : cardNum,
             name : custName, 
             exp : cardExp, 
             amount : orderAmount
         }).then((response) => {
             console.log(response);
-            return response.statusText;
+            statusText = response.statusText;
         }).catch((error) => {
             console.error(error);
         });
+        */
+        try {
+           const response = await blitzApi.post('CreditCard/', {
+               vendor : 'VE001-99',
+               trans : '907-927654321-296',
+               cc : cardNum,
+               name : custName, 
+               exp : cardExp, 
+               amount : orderAmount
+           })
+            statusText = response.statusText;
+        } catch (error) {
+            console.error(error);
+        }
         setCart([]); // then clear cart
+        console.log(`STATUS TEXTend ${statusText}`)
+        return statusText;
     };
 
-    const processTransaction = () => {
+    const processTransaction = async () => {
         // Input values for customer.
         let firstName = firstNameRef.current.value;
         let lastName = lastNameRef.current.value;
@@ -82,7 +110,7 @@ const Products = () => {
         let cardExp = cardExpRef.current.value;
 
         // CUSTOMER
-        api.post('customer_interaction/customer/create', {
+        autoApi.post('customer_interaction/customer/create', {
             email: email,
             first_name: firstName,
             last_name: lastName,
@@ -96,18 +124,38 @@ const Products = () => {
         // For the customer, this will be wasteful and simply works as a needed solution.
         // It does not check for duplicate customers, this simply uses the last created
         // customer's ID to fulfill the order.
-        axios.get('http://localhost:3000/customer_interaction/customer/all').then((response) => {
-            setCustomerList(response.data);
-        });
-        let orderCustID = customerList.pop().customer_id;
+        /*
+        autoApi.get('customer_interaction/customer/all')
+            .then((response) => {
+               setCustomerList(response.data);
+            }).catch((error) => {
+                console.error(error);
+            });
+        */
+        try {
+           const response = await autoApi.get('customer_interaction/customer/all')
+               setCustomerList(response.data);
+           console.log(response.data)
+        } catch (error) {
+                console.error(error);
+        }
+
+        let orderCustID = -1;
+        if (customerList.length > 0) 
+           orderCustID = customerList.pop().order_id;
+
+        console.log(orderCustID)
         // Now we begin by getting our weight.
         let orderWeight = 0;
         cart.map((product) => {
             orderWeight += product.weight;
         });
-        axios.get('http://localhost:3000/customer_interaction/extra_charge/all').then((response) => {
-            setWeightList(response.data);
-        });
+        autoApi.get('customer_interaction/extra_charge/all')
+           .then((response) => {
+                setWeightList(response.data);
+            }).catch((error) => {
+                console.error(error);
+            });
         // We now have all the weight 'brackets' defined in the database.
         // From here we can skim over them all to find the 'bracket' that the weight
         // of our order fits into.
@@ -127,76 +175,99 @@ const Products = () => {
         });
         // Now we can add shipping/handling costs.
         orderTotal += orderShipping + orderHandling;
+        console.log(orderTotal)
 
         // Process cc transaction.
         // If transaction doesn't go through, we can simply delete the latest customer.
-        let res = confirmTransaction(cardNumber, cardExp, firstName+' '+lastName, orderTotal);
-        if(res === 'OK'){
-            // Get current date.
-            // Can't figure out how to get in local timezone.
-            let date = new Date(); 
+        let status = 'broken';
+        let res = confirmTransaction(cardNumber, cardExp, firstName+' '+lastName, orderTotal)
+        res.then( (statusText) => {
+           if(statusText === 'OK'){
+               // Get current date.
+               // Can't figure out how to get in local timezone.
+               let d = new Date();
+               let month = d.getMonth();
+               let day = d.getDate();
+               let date = d.getFullYear() + '-'
+                        + (month < 10 ? '0' + month : month) + '-'
+                        + (day < 10 ? '0' + day : day);
 
-            // ORDER
-            api.post('customer_interaction/order/create', {
-                customer_id : orderCustID,
-                weight: orderWeight,
-                shipping: orderShipping,
-                handling: orderHandling,
-                charge_total: orderTotal,
-                order_date: date,
-                status: 'Created'
-            }).then((response) => {
-                console.log(response);
-            }).catch((error) => {
-                console.error(error);
-            });
+               // ORDER
+               autoApi.post('customer_interaction/order/create', {
+                   customer_id : orderCustID,
+                   weight: orderWeight,
+                   shipping: orderShipping,
+                   handling: orderHandling,
+                   charge_total: orderTotal,
+                   order_date: date,
+                   status: 'Created'
+               }).then((response) => {
+                   console.log(response);
+               }).catch((error) => {
+                   console.error(error);
+               });
 
-            // Same with customer, in order to get the order ID we are using the method
-            // of selecting all orders and getting the id of the last order.
-            // Inefficient, but it works.
-            axios.get('http://localhost:3000/customer_interaction/order/all').then((response) => {
-                setOrderList(response.data);
-            });
-            let orderID = orderList.pop().order_id;
-            // Now, for each product in our order we must make an entry in the part_collection db.
-            let uniqueProducts = [];
-            cart.map((product) => {
-                let orderPartNum = product.number;
-                if(uniqueProducts.find(element => element === orderPartNum) === undefined){
-                    // If we don't find the same part num already in the array.
-                    uniqueProducts.push(orderPartNum);
-                    let orderQuantity = 0;
-                    // Loop through to determine how many of a certain product was in the order.
-                    cart.map((product) => {
-                        if(product.number === orderPartNum){
-                            orderQuantity += 1;
-                        }
-                    });
-                    // PART COLLECTION
-                    api.post('customer_interaction/part_collection/create', {
-                        order_id: orderID,
-                        number: orderPartNum,
-                        quantity: orderQuantity
-                    }).then((response) => {
-                        console.log(response);
-                    }).catch((error) => {
-                        console.error(error);
-                    });
-                }
-            });
-        }
-        else{
-            api.delete('customer_interaction/customer/delete/'+orderCustID)
-            .then((response) => {
-                console.log(response);
-            }).catch((error) => {
-                console.error(error);
-            });
-        }
+               // Same with customer, in order to get the order ID we are using the method
+               // of selecting all orders and getting the id of the last order.
+               // Inefficient, but it works.
+
+               autoApi.get('customer_interaction/order/all')
+               .then((response) => {
+                 setOrderList(response.data);
+                 let orderID = orderList.pop().order_id;
+                 // Now, for each product in our order we must make an entry in the part_collection db.
+                 let uniqueProducts = [];
+                 cart.map((product) => {
+                    let orderPartNum = product.number;
+                      if(uniqueProducts.find(element => element === orderPartNum) === undefined){
+                          // If we don't find the same part num already in the array.
+                          uniqueProducts.push(orderPartNum);
+                          let orderQuantity = 0;
+                          // Loop through to determine how many of a certain product was in the order.
+                          cart.map((product) => {
+                              if(product.number === orderPartNum){
+                                  orderQuantity += 1;
+                              }
+                          });
+                          // PART COLLECTION
+                          autoApi.post('customer_interaction/part_collection/create', {
+                              order_id: orderID,
+                              number: orderPartNum,
+                              quantity: orderQuantity
+                          }).then((response) => {
+                              console.log(response);
+                          }).catch((error) => {
+                              console.error(error);
+                          });
+                      }
+                  });
+                  }).catch((error) => {
+                      console.error(error);
+                  });
+               /*
+               try {
+                   const response = await autoApi.get('customer_interaction/order/all')
+                   setOrderList(response.data);
+               } catch (error) {
+                   console.error(error);
+               }
+               */
+           }
+           else{
+               autoApi.delete('customer_interaction/customer/delete/'+orderCustID)
+               .then((response) => {
+                   console.log(response);
+               }).catch((error) => {
+                   console.error(error);
+               });
+           }
+        });
     }
 
     const addToCart = (product) => {
-        setCart([...cart, { ...product}]);
+        console.log(product)
+        setCart([...cart, {...product}]);
+        console.log('cart')
         console.log(cart);
         console.log(productList);
     }

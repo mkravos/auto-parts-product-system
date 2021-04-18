@@ -55,7 +55,7 @@ CREATE TABLE IF NOT EXISTS `order` (
    shipping       DOUBLE(5, 2) NOT NULL, 
    handling       DOUBLE(5, 2) NOT NULL, 
    charge_total   DOUBLE(5, 2) NOT NULL, 
-   order_date     TIMESTAMP NOT NULL,
+   order_date     DATE NOT NULL,
    status         CHAR(50) NOT NULL,
    FOREIGN KEY(customer_id) REFERENCES customer(customer_id)
 );
@@ -117,19 +117,19 @@ INSERT INTO `order`
    1, 1.0,
    (SELECT shipping FROM extra_charge WHERE weight >= 1.0 AND weight < 2.1),
    (SELECT handling FROM extra_charge WHERE weight >= 1.0 AND weight < 2.1),
-   10.11, (SELECT CURRENT_TIMESTAMP), 'in progress'
+   10.11, (SELECT CURDATE()), 'in progress'
 ),
 (
    2, 2.0,
    (SELECT shipping FROM extra_charge WHERE weight >= 2.0 AND weight < 3.1),
    (SELECT handling FROM extra_charge WHERE weight >= 2.0 AND weight < 3.1),
-   20.22, (SELECT CURRENT_TIMESTAMP), 'in progress'
+   20.22, (SELECT CURDATE()), 'in progress'
 ),
 (
    3, 3.0,
    (SELECT shipping FROM extra_charge WHERE weight >= 3.0),
    (SELECT handling FROM extra_charge WHERE weight >= 3.0),
-   30.33, (SELECT CURRENT_TIMESTAMP), 'in progress'
+   30.33, (SELECT CURDATE()), 'in progress'
 );
 
 INSERT INTO part_collection
