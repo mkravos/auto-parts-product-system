@@ -38,8 +38,7 @@ List of features ready and TODOs for future development
 * Completed Client User Interface styling and design
 
 To-do list:
-* Navigation Links functionality
-* Post interaction functionality
+* Login and Authentication functionality
 
 ## Status
 The project may be continued at a later date.
