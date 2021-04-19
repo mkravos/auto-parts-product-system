@@ -4,6 +4,11 @@ import { AddShoppingCart, Assessment } from '@material-ui/icons';
 
 import useStyles from './styles';
 
+/*
+* Generates the Product component that displays the product image, description, price, and other information.
+*
+* @return JSX that performs the generation of the Product Component.
+*/
 const Product = ({ product }) => {
     const classes = useStyles();
 

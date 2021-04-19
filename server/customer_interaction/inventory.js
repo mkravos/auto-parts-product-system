@@ -1,3 +1,4 @@
+// Require needed libraries
 const express = require('express')
 const cors = require('cors');
 const router = express.Router()
@@ -7,6 +8,7 @@ const db = require('../customer_interaction_db');
 router.use(express.json());
 router.use(cors());
 
+// This API call returns all of the entries from inventory
 router.get('/all', (req, res) => {
     db.query('SELECT * FROM inventory', (err, result) => {
       if (err) {
@@ -17,6 +19,7 @@ router.get('/all', (req, res) => {
     });
 });
 
+// This API call returns a specific entry from inventory
 router.get('/select/:number', (req, res) => {
     const number = req.params.number;
     db.query('SELECT * FROM inventory WHERE number = ?', number, (err, result) => {
@@ -31,6 +34,7 @@ router.get('/select/:number', (req, res) => {
     });
 });
 
+// This API call creates a new entry in the inventory
 router.post("/create", (req, res) => {
   const number	 = req.body.number;
   const quantity = req.body.quantity;
@@ -48,6 +52,7 @@ router.post("/create", (req, res) => {
   );
 });
 
+// This API call updates an existing entry in the inventory
 router.put("/update", (req, res) => {
   const number	 = req.body.number;
   const quantity = req.body.quantity;
@@ -72,6 +77,7 @@ router.put("/update", (req, res) => {
   );
 });
 
+// This API call deletes an entry from the inventory
 router.delete("/delete/:number", (req, res) => {
   const number	 = req.params.number;
 
@@ -88,4 +94,5 @@ router.delete("/delete/:number", (req, res) => {
   );
 });
 
+// Export router to be used by app.js
 module.exports = router;

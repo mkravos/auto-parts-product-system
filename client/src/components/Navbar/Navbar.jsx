@@ -10,6 +10,11 @@ import HomeIcon from '@material-ui/icons/Home';
 import logo from '../../assets/Logo.png';
 import useStyles from './styles';
 
+/*
+* Generates the Navigation Bar used internally to navigate between Home, Admin, Shipping, Receiving.
+*
+* @return JSX that performs the generation of the Navigation Bar.
+*/
 const PrimarySearchAppBar = () => {
   const classes = useStyles();
 

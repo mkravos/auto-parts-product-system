@@ -2,6 +2,9 @@ import { makeStyles, fade } from '@material-ui/core/styles';
 
 const drawerWidth = 0;
 
+/*
+* Contains the style for the Navbar.
+*/
 export default makeStyles((theme) => ({
   appBar: {
     boxShadow: 'none',
