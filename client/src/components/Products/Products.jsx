@@ -1,3 +1,4 @@
+// Require needed libraries.
 import React, { useRef, useState, useEffect } from 'react';
 import axios from 'axios';
 import { AppBar, Toolbar, IconButton, Badge, MenuItem, Menu, Typography, Grid, Card, CardMedia, CardContent, CardActions } from '@material-ui/core';
@@ -5,23 +6,28 @@ import { AddShoppingCart, DeleteForever } from '@material-ui/icons';
 import Button from '@material-ui/core/Button';
 import TextField from '@material-ui/core/TextField';
 
-
+// Require more libraries.
 import Product from './Product/Product';
 import useStyles from './Product/styles';
 
+// Require for material table.
 import HomeIcon from '@material-ui/icons/Home';
 import { ShoppingCart } from '@material-ui/icons';
 
+// Require for logo.
 import logo from '../../assets/Logo.png';
 
+// API to handle interacting and fetching data from server.
 const api = axios.create({baseURL: 'http://localhost:3000/'});
 
 const Products = () => {
+    // Define pages for navigation.
     const PAGE_PRODUCTS = 'products';
     const PAGE_CART = 'cart';
     const PAGE_CHECKOUT = 'checkout';
     const PAGE_ORDERCONFIRMED = 'orderconfirmed';
 
+    // Define containers to store data.
     const [cart, setCart] = useState([]);
     const [page, setPage] = useState(PAGE_PRODUCTS);
     const [productList, setProductList] = useState([]);
@@ -30,6 +36,7 @@ const Products = () => {
     const [orderList, setOrderList] = useState([]);
     const [ccResList, setCCRes] = useState([]);
 
+    // Define references for customer information.
     let firstNameRef = useRef(null);
     let lastNameRef = useRef(null);
     let addressRef = useRef(null);
@@ -37,6 +44,7 @@ const Products = () => {
     let cardNumberRef = useRef(null);
     let cardExpRef = useRef(null);
 
+    // Define format for displaying currency information.
     var formatter = new Intl.NumberFormat('en-US', {
         style: 'currency',
         currency: 'USD',
@@ -46,12 +54,18 @@ const Products = () => {
         //maximumFractionDigits: 0, // (causes 2500.99 to be printed as $2,501)
     });
 
+    // Function to retrieve all current parts in database.
+    // Does not take parameters.
+    // Does not return anything.
     const getProducts = () => {
         axios.get('http://localhost:3000/parts/all').then((response) => {
             setProductList(response.data);
         });
     };
 
+    // Function to retrieve all current customers in database.
+    // Does not take parameters.
+    // Does not return anything.
     const getCustomers = async () => {
         try {
             const response = await api.get('customer_interaction/customer/all')
@@ -61,6 +75,9 @@ const Products = () => {
         }
     }
 
+    // Function to retrieve all current orders in database.
+    // Does not take parameters.
+    // Does not return anything.
     const getOrders = async () => {
         try {
             const response = await api.get('customer_interaction/order/all')
@@ -70,7 +87,9 @@ const Products = () => {
         }
     }
 
-    // process credit card, then clear the cart
+    // Function to process credit card transaction with external server.
+    // Takes in a customer's name, card number, card experation date, and order amount.
+    // Returns a response from the external server.
     const confirmTransaction = async (cardNum, cardExp, custName, orderAmount) => {
         // Somehow we need vendor and trans to be unique.
         let transactionNum = Math.floor(Math.random() * 999);
@@ -91,6 +110,9 @@ const Products = () => {
         }
     };
 
+    // Function to process the order transaction.
+    // Does not take parameters.
+    // Does not return anything.
     const processTransaction = () => {
         // Input values for customer.
         let firstName = firstNameRef.current.value;
@@ -102,7 +124,7 @@ const Products = () => {
         let cardNumber = cardNumberRef.current.value;
         let cardExp = cardExpRef.current.value;
 
-        // CUSTOMER
+        // Create a customer using form data.
         api.post('customer_interaction/customer/create', {
             email: email,
             first_name: firstName,
@@ -113,29 +135,29 @@ const Products = () => {
         }).catch((error) => {
             console.error(error);
         });
-        // Generate values for order creation.
-        // For the customer, this will be wasteful and simply works as a needed solution.
-        // It does not check for duplicate customers, this simply uses the last created
-        // customer's ID to fulfill the order.
+        
+        // Retrieve number of customers to determine customer ID.
         getCustomers();
         let orderCustID = -1;
         if (customerList.length > 0){
             orderCustID = customerList.pop().customer_id;
         }
-        // Now we begin by getting our weight.
+        
+        // Calculate weight of entire order.
         let orderWeight = 0;
         cart.map((product) => {
             orderWeight += product.weight;
         });
+        
+        // Retrieve weight brackets defined in database.
         axios.get('http://localhost:3000/customer_interaction/extra_charge/all')
             .then((response) => {
                 setWeightList(response.data);
             }).catch((error) =>{
                 console.error(error);
             });
-        // We now have all the weight 'brackets' defined in the database.
-        // From here we can skim over them all to find the 'bracket' that the weight
-        // of our order fits into.
+        
+        // Calculate shipping/handling price of order from weight brackets.
         let orderShipping = 0;
         let orderHandling = 0;
         for(let weight of weightList){
@@ -144,16 +166,15 @@ const Products = () => {
                 orderHandling = weight.handling;
             }
         }
-        // Now we can determine the total price of the order.
-        // First, we calculate the raw cost of the order without shipping/handling.
+        
+        // Calculate the total price of the order.
         let orderTotal = 0;
         cart.map((product) => {
             orderTotal += product.price;
         });
-        // Now we can add shipping/handling costs.
         orderTotal += orderShipping + orderHandling;
 
-        // Process cc transaction.
+        // Process credit card transaction.
         // If transaction doesn't go through, we can simply delete the latest customer.
         let ccRes = "allClear";
         confirmTransaction(cardNumber, cardExp, firstName+' '+lastName, orderTotal)
@@ -167,9 +188,10 @@ const Products = () => {
         if(ccResList.length > 0){
             ccRes = ccResList;
         }
+        
+        // Proceed with order creation if no errors were encountered.
         if(ccRes === 'allClear'){
             // Get current date.
-            // Can't figure out how to get in local timezone.
             let d = new Date();
             let month = d.getMonth();
             let day = d.getDate();
@@ -177,7 +199,7 @@ const Products = () => {
                 + (month < 10 ? '0' + month : month) + '-'
                 + (day < 10 ? '0' + day : day); 
 
-            // ORDER
+            // Create an order using calculated values.
             api.post('customer_interaction/order/create', {
                 customer_id : orderCustID,
                 weight: orderWeight,
@@ -192,29 +214,31 @@ const Products = () => {
                 console.error(error);
             });
 
-            // Same with customer, in order to get the order ID we are using the method
-            // of selecting all orders and getting the id of the last order.
-            // Inefficient, but it works.
+            // Retrieve all orders in the database to determine order ID.
             getOrders();
             let orderID = -1;
             if (orderList.length > 0){
                 orderID = orderList.pop().order_id;
             }
-            // Now, for each product in our order we must make an entry in the part_collection db.
+            
+            // Create a entry in the part_collection database for each unique product.
             let uniqueProducts = [];
             cart.map((product) => {
                 let orderPartNum = product.number;
+                // If we don't find the same part num already in the array.
                 if(uniqueProducts.find(element => element === orderPartNum) === undefined){
-                    // If we don't find the same part num already in the array.
+                    // Keep track of unique products in our order.
                     uniqueProducts.push(orderPartNum);
                     let orderQuantity = 0;
+                    
                     // Loop through to determine how many of a certain product was in the order.
                     cart.map((product) => {
                         if(product.number === orderPartNum){
                             orderQuantity += 1;
                         }
                     });
-                    // PART COLLECTION
+                    
+                    // Create an entry in part_collection for our order.
                     api.post('customer_interaction/part_collection/create', {
                         order_id: orderID,
                         number: orderPartNum,
@@ -226,11 +250,16 @@ const Products = () => {
                     });
                 }
             });
-            setCart([]); // then clear cart
-            navigateTo(PAGE_PRODUCTS);
+            
+            // Once transaction is complete, clear the cart and return to catalog.
+            setCart([]);
+            navigateTo(PAGE_ORDERCONFIRMED);
         }
         else{
+            // If there were an error in credit card processing, display the error.
             console.error('ERROR:'+ccRes);
+            
+            // Delete the newly added customer from the database.
             api.delete('customer_interaction/customer/delete/'+orderCustID)
             .then((response) => {
                 console.log(response);
@@ -240,16 +269,25 @@ const Products = () => {
         }
     }
 
+    // Function to add a product to the cart.
+    // Does not take parameters.
+    // Does not return anything.
     const addToCart = (product) => {
         setCart([...cart, { ...product}]);
         console.log(cart);
         console.log(productList);
     }
 
+    // Function to remove a product from the cart.
+    // Does not take parameters.
+    // Does not return anything.
     const removeFromCart = (productToRemove) => {
         setCart(cart.filter(product => product !== productToRemove));
     }
 
+    // Function to retrieve the total value of cart, before shipping/handling.
+    // Does not take parameters.
+    // Returns the sum of the cart.
     const getCartTotal = () => {
         var sum = 0;
         cart.map((product) => {
@@ -395,7 +433,6 @@ const Products = () => {
         </div>
     )
 
-    // this is where I'm thinking confirmTransaction should be called from in order to confirm the credit card details and finalize the order
     const renderOrderConfirmed = () => (
         <div style={{justifyContent:'center', alignItems:'center'}}>
             <center>
