@@ -259,6 +259,9 @@ const Products = () => {
         setPage(nextPage);
     }
 
+    /*
+    * Renders all of the products 
+    */
     const renderProducts = () => (
        <> 
         <Grid container justify="center" spacing={4}>
@@ -292,6 +295,9 @@ const Products = () => {
        </>
     )
 
+    /*
+    * Renders the products that are present in the Cart, as well as price total
+    */
     const renderCart = () => (
         <> 
         <Grid container justify="center" spacing={4}>

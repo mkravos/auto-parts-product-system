@@ -1,5 +1,8 @@
 import { makeStyles } from '@material-ui/core/styles';
 
+/*
+* Contains the style for the Product.
+*/
 export default makeStyles(() => ({
     root: {
         maxWidth: '100%'
