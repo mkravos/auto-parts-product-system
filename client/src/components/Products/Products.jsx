@@ -28,6 +28,7 @@ const Products = () => {
     const [customerList, setCustomerList] = useState([]);
     const [weightList, setWeightList] = useState([]);
     const [orderList, setOrderList] = useState([]);
+    const [ccResList, setCCRes] = useState([]);
 
     let firstNameRef = useRef(null);
     let lastNameRef = useRef(null);
@@ -51,23 +52,45 @@ const Products = () => {
         });
     };
 
-    // process credit card, then clear the cart
-    const confirmTransaction = (cardNum, cardExp, custName, orderAmount) => {
-        // Somehow we need vendor and trans to be unique.
-        api.post('http://blitz.cs.niu.edu/CreditCard/', {
-            vendor : 'VE001-99',
-            trans : '907-987654321-296',
-            cc : cardNum,
-            name : custName, 
-            exp : cardExp, 
-            amount : orderAmount
-        }).then((response) => {
-            console.log(response);
-            return response.statusText;
-        }).catch((error) => {
+    const getCustomers = async () => {
+        try {
+            const response = await api.get('customer_interaction/customer/all')
+            setCustomerList(response.data);
+        } catch (error) {
             console.error(error);
-        });
+        }
+    }
+
+    const getOrders = async () => {
+        try {
+            const response = await api.get('customer_interaction/order/all')
+            setOrderList(response.data);
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+    // process credit card, then clear the cart
+    const confirmTransaction = async (cardNum, cardExp, custName, orderAmount) => {
+        // Somehow we need vendor and trans to be unique.
+        let transactionNum = Math.floor(Math.random() * 999);
+        transactionNum += '-'+Math.floor(Math.random() * 999999999);
+        transactionNum += '-'+Math.floor(Math.random() * 999)
+        try {
+            const response = await axios.post('http://blitz.cs.niu.edu/CreditCard/', {
+                vendor : 'VE001-99',
+                trans : transactionNum,
+                cc : cardNum,
+                name : custName, 
+                exp : cardExp, 
+                amount : orderAmount
+            })
+            return response.data.errors;
+        } catch (error) {
+            console.error(error);
+        }
         setCart([]); // then clear cart
+        navigateTo(PAGE_PRODUCTS);
     };
 
     const processTransaction = () => {
@@ -96,18 +119,22 @@ const Products = () => {
         // For the customer, this will be wasteful and simply works as a needed solution.
         // It does not check for duplicate customers, this simply uses the last created
         // customer's ID to fulfill the order.
-        axios.get('http://localhost:3000/customer_interaction/customer/all').then((response) => {
-            setCustomerList(response.data);
-        });
-        let orderCustID = customerList.pop().customer_id;
+        getCustomers();
+        let orderCustID = -1;
+        if (customerList.length > 0){
+            orderCustID = customerList.pop().customer_id;
+        }
         // Now we begin by getting our weight.
         let orderWeight = 0;
         cart.map((product) => {
             orderWeight += product.weight;
         });
-        axios.get('http://localhost:3000/customer_interaction/extra_charge/all').then((response) => {
-            setWeightList(response.data);
-        });
+        axios.get('http://localhost:3000/customer_interaction/extra_charge/all')
+            .then((response) => {
+                setWeightList(response.data);
+            }).catch((error) =>{
+                console.error(error);
+            });
         // We now have all the weight 'brackets' defined in the database.
         // From here we can skim over them all to find the 'bracket' that the weight
         // of our order fits into.
@@ -130,11 +157,23 @@ const Products = () => {
 
         // Process cc transaction.
         // If transaction doesn't go through, we can simply delete the latest customer.
-        let res = confirmTransaction(cardNumber, cardExp, firstName+' '+lastName, orderTotal);
-        if(res === 'OK'){
+        let ccRes = "allClear";
+        confirmTransaction(cardNumber, cardExp, firstName+' '+lastName, orderTotal)
+            .then((response) => {
+                setCCRes(response[0]);
+            }).catch((error) => {
+                console.error(error);
+            })
+        ccRes = ccResList;
+        if(ccRes == 'allClear'){
             // Get current date.
             // Can't figure out how to get in local timezone.
-            let date = new Date(); 
+            let d = new Date();
+            let month = d.getMonth();
+            let day = d.getDate();
+            let date = d.getFullYear() + '-'
+                + (month < 10 ? '0' + month : month) + '-'
+                + (day < 10 ? '0' + day : day); 
 
             // ORDER
             api.post('customer_interaction/order/create', {
@@ -154,10 +193,11 @@ const Products = () => {
             // Same with customer, in order to get the order ID we are using the method
             // of selecting all orders and getting the id of the last order.
             // Inefficient, but it works.
-            axios.get('http://localhost:3000/customer_interaction/order/all').then((response) => {
-                setOrderList(response.data);
-            });
-            let orderID = orderList.pop().order_id;
+            getOrders();
+            let orderID = -1;
+            if (orderList.length > 0){
+                orderID = orderList.pop().order_id;
+            }
             // Now, for each product in our order we must make an entry in the part_collection db.
             let uniqueProducts = [];
             cart.map((product) => {
