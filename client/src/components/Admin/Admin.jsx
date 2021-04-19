@@ -1,8 +1,10 @@
+// Require dependencies
 import React, { useState, useEffect } from 'react';
 import { forwardRef } from 'react';
 import axios from 'axios';
 import { Grid } from '@material-ui/core';
 
+// Require material-UI libraries
 import MaterialTable from 'material-table';
 import AddBox from '@material-ui/icons/AddBox';
 import ArrowDownward from '@material-ui/icons/ArrowDownward';
@@ -22,8 +24,10 @@ import ViewColumn from '@material-ui/icons/ViewColumn';
 import Alert from '@material-ui/lab/Alert';
 import ArrowDownwardIcon from '@material-ui/icons/ArrowDownward';
 
+// Require navbar to be shown on page
 import Navbar from '../Navbar/Navbar';
 
+// Define table icons
 const tableIcons = {
     Add: forwardRef((props, ref) => <AddBox {...props} ref={ref} />),
     Check: forwardRef((props, ref) => <Check {...props} ref={ref} />),
@@ -45,6 +49,7 @@ const tableIcons = {
     ArrowDownwardIcon: forwardRef((props, ref) => <ArrowDownwardIcon {...props} ref={ref} />)
 };
 
+// API to handle interacting and fetching data from server.
 const api = axios.create({baseURL: 'http://localhost:3000'});
 
 const Admin = () => {
@@ -65,7 +70,7 @@ const Admin = () => {
         {title: "Handling", field: "handling"},
     ]
 
-    // Table data.
+    // For table data.
     const [data2, setData2] = useState([]); // order
     const [data, setData] = useState([]); // extra_charge
 
@@ -73,17 +78,18 @@ const Admin = () => {
     const [iserror, setIserror] = useState(false)
     const [errorMessages, setErrorMessages] = useState([])
 
-    // Fetch data from database and add to tables.
-    useEffect(() => { // all orders
+    useEffect(() => {
+        // Fetch all order data from database and add to table.
         api.get('/customer_interaction/order/all')
             .then(res => {
-                setData2(res.data2)
+                setData(res.data)
             })
             .catch(error=>{
                 console.log("Error")
             })
     }, [])
-    useEffect(() => { // all extra charges
+    useEffect(() => {
+        // Fetch all extra charge data from database and add to table.
         api.get('/customer_interaction/extra_charge/all')
             .then(res => {
                 setData(res.data)
@@ -93,6 +99,9 @@ const Admin = () => {
             })
     }, [])
 
+    // Validates input and handles row updating (editing) on the extra_charge table.
+    // Parameters: newData, oldData, resolve.
+    // Returns: Nothing
     const handleRowUpdate = (newData, oldData, resolve) => {
         // Validate input.
         let errorList = []
@@ -128,6 +137,9 @@ const Admin = () => {
         }
     }
 
+    // Validates input and handles adding new rows to the extra_charge table.
+    // Parameters: newData, resolve.
+    // Returns: Nothing
     const handleRowAdd = (newData, resolve) => {
         // Validate input.
         let errorList = []
@@ -162,6 +174,9 @@ const Admin = () => {
         }
     }
 
+    // Validates input and handles removing rows from the extra_charge table.
+    // Parameters: oldData, resolve.
+    // Returns: Nothing
     const handleRowDelete = (oldData, resolve) => {
         api.delete("/customer_interaction/extra_charge/delete/"+oldData.weight)
         .then(res => {
