@@ -1,8 +1,10 @@
+// Require needed libraries.
 import React, { useState, useEffect } from 'react';
 import { forwardRef } from 'react';
 import axios from 'axios';
 import { Grid } from '@material-ui/core';
 
+// Require for material table.
 import MaterialTable from 'material-table';
 import AddBox from '@material-ui/icons/AddBox';
 import ArrowDownward from '@material-ui/icons/ArrowDownward';
@@ -22,8 +24,10 @@ import ViewColumn from '@material-ui/icons/ViewColumn';
 import Alert from '@material-ui/lab/Alert';
 import ArrowDownwardIcon from '@material-ui/icons/ArrowDownward';
 
+// Require for navigation bar.
 import Navbar from '../Navbar/Navbar';
 
+// Get all table icons that will be used.
 const tableIcons = {
     Add: forwardRef((props, ref) => <AddBox {...props} ref={ref} />),
     Check: forwardRef((props, ref) => <Check {...props} ref={ref} />),
@@ -68,7 +72,8 @@ const Shipping = () => {
     const [iserror, setIserror] = useState(false)
     const [errorMessages, setErrorMessages] = useState([])
 
-    // Fetch data.
+    // Function that fetches data from the database.
+    // Sets the data to be displayed.
     useEffect(() => {
         api.get('/customer_interaction/order/all')
             .then(res => {
@@ -80,6 +85,8 @@ const Shipping = () => {
     }, [])
 
     // Function that handles updating a current order's status.
+    // Takes in new/old order data and updates the table.
+    // Does not return anything.
     const handleRowUpdate = (newData, oldData, resolve) => {
         // Validate input.
         let errorList = []
@@ -111,6 +118,8 @@ const Shipping = () => {
     }
 
     // Function that handles deleting orders.
+    // Takes in old order data to locate the row to delete.
+    // Does not return anything.
     const handleRowDelete = (oldData, resolve) => {
         api.delete("/customer_interaction/order/delete/"+oldData.order_id)
         .then(res => {
@@ -127,6 +136,8 @@ const Shipping = () => {
     }
 
     // Function that creates a .csv file containing the selected order that is automatically downloaded.
+    // Takes in the order information for specific row.
+    // Does not return anything.
     const handleClick = (rowData) => {
         // Create string for .csv file.
         let text = '';
