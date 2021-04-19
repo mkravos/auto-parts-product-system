@@ -89,8 +89,6 @@ const Products = () => {
         } catch (error) {
             console.error(error);
         }
-        setCart([]); // then clear cart
-        navigateTo(PAGE_PRODUCTS);
     };
 
     const processTransaction = () => {
@@ -224,6 +222,8 @@ const Products = () => {
                     });
                 }
             });
+            setCart([]); // then clear cart
+            navigateTo(PAGE_PRODUCTS);
         }
         else{
             api.delete('customer_interaction/customer/delete/'+orderCustID)
