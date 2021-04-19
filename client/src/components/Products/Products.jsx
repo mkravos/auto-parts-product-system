@@ -158,12 +158,16 @@ const Products = () => {
         let ccRes = "allClear";
         confirmTransaction(cardNumber, cardExp, firstName+' '+lastName, orderTotal)
             .then((response) => {
-                setCCRes(response[0]);
+                if(response){
+                    setCCRes(response[0]);
+                }
             }).catch((error) => {
                 console.error(error);
             })
-        ccRes = ccResList;
-        if(ccRes == 'allClear'){
+        if(ccResList.length > 0){
+            ccRes = ccResList;
+        }
+        if(ccRes === 'allClear'){
             // Get current date.
             // Can't figure out how to get in local timezone.
             let d = new Date();
@@ -226,6 +230,7 @@ const Products = () => {
             navigateTo(PAGE_PRODUCTS);
         }
         else{
+            console.error('ERROR:'+ccRes);
             api.delete('customer_interaction/customer/delete/'+orderCustID)
             .then((response) => {
                 console.log(response);
