@@ -6,10 +6,12 @@ const db = require('../login_db');
 router.use(express.json());
 router.use(cors());
 
+// for verbosity
 router.get('/', (req, res) => {
   res.send('root of position_collection table operations\n');
 });
 
+// add row with account_id and position_id to position_collection
 router.post("/create", (req, res) => {
    const account_id = req.body.account_id
    const position_id = req.body.position_id
@@ -26,6 +28,7 @@ router.post("/create", (req, res) => {
    );
 });
 
+// get all rows and columns from position_collection
 router.get("/all", (req, res) => {
    db.query(
       "SELECT * FROM position_collection", (err, result) => {
@@ -37,6 +40,7 @@ router.get("/all", (req, res) => {
    });
 });
 
+// get all columns from a row from position_collection given by position_collection_id
 router.get("/select/:id", (req, res) => {
    const id = req.params.id;
    db.query(
@@ -49,6 +53,8 @@ router.get("/select/:id", (req, res) => {
    });
 });
 
+// replace account_id and position_id in position_collection at row given by 
+// position_collection_id
 router.put("/update", (req, res) => {
    const id = req.body.id;
    const account_id = req.body.account_id;
@@ -66,6 +72,7 @@ router.put("/update", (req, res) => {
    );
 });
 
+// delete row in position_collection given by position_collection_id
 router.delete("/delete/:id", (req, res) => {
    const id = req.params.id;
    db.query(

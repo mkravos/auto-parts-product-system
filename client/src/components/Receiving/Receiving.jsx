@@ -40,10 +40,19 @@ const tableIcons = {
    ViewColumn: forwardRef((props, ref) => <ViewColumn {...props} ref={ref} />)
 };
 
+// we use this object to do CRUD operations on customer_interaction_db
+// by interfacing with the server at baseURL which contains functions
+// to do what we want
 const api = axios.create({baseURL: 'http://localhost:3000/'});
 
+// main react function for this file
 const Receiving = () => {
 
+   const [inventoryData, setInventoryData] = useState([]); 
+   const [partsData, setPartsData] = useState([]);
+   // the following do not refresh the view which displays the data
+   //
+   // refresh client data with rows from customer_interaction_db.inventory
    const refreshInventory = () => {
       api.get('customer_interaction/inventory/all')
          .then(res => {
@@ -53,6 +62,7 @@ const Receiving = () => {
             console.log("Error")
          });
    };
+   // refresh client data with rows from csci467.parts
    const refreshParts = () => {
       api.get('parts/all')
          .then(res => {
@@ -62,15 +72,18 @@ const Receiving = () => {
             console.log("Error")
          });
    };
-   // refresh tables
+
+   // set the refresh functions to be used on refresh of the page
    useEffect(refreshInventory, []);
    useEffect(refreshParts, []);
 
+   // corresponds with customer_interaction_db.inventory
    const inventoryColumns = [
       {title: "Number", field: "number", width: "1/4"},
       {title: "Quantity", field: "quantity"}
    ];
 
+   // corresponds with csci467.parts
    const partsColumns = [
       {title: "Number", field: "number", width: "1/4"},
       {title: "Description", field: "description"},
@@ -79,27 +92,39 @@ const Receiving = () => {
       {title: "Picture URL", field: "pictureURL"}
    ];
 
-   // customer_interaction.inventory
-   const [inventoryData, setInventoryData] = useState([]); 
-   // csci467.parts
-   const [partsData, setPartsData] = useState([]);
    const [iserror, setIserror] = useState(false);
    const [errorMessages, setErrorMessages] = useState([]);
 
+   // cosmetics
    const classes = useStyles();
+   // the refs allow access to data entered in a form etc.
+   //
+   // here we use reacts useRef
    let partIdRef = useRef(null);
    let quantityRef = useRef(null);
 
+   // executed when one clicks the submit button
+   //
+   // starts with capital letter just in case certain react
+   // features are put into place
    const OnSubmit = async () => {
 
+      // extract the main values we want from the user
       let partId = partIdRef.current.value;
       let quantity = quantityRef.current.value;
+
+      // we will find the corresponding part number if a valid description is 
+      // given in partId, else partNumber will be set to a valid part number
+      // if given
       let partNumber = 0;
+      // determined by a valid part number
       let found = false;
+      // will tell us if a partId exists in the databases we are using
       const getLen = (response) => ( Object.keys(response.data).length );
 
       // aquire the number from csci467.parts
-      // if a number is given
+      //
+      // a number is given
       if (/^\d+$/.test(partId)) {
          try {
             let response = await api.get(`parts/select/${partId}`);
@@ -109,7 +134,7 @@ const Receiving = () => {
          } catch (error) {
             console.error(error);
          }
-      // consider anything else to be a description
+      // a description is given
       } else {
          try {
             partId = encodeURIComponent(partId);
@@ -122,7 +147,8 @@ const Receiving = () => {
          }
       }
 
-      // if the part number exists
+      // the partNumber was able to be determined from the user provided
+      // partId
       if (found) {
          try {
             var response = await api
@@ -130,7 +156,7 @@ const Receiving = () => {
          } catch (error) {
             console.error(error);
          }
-         // if that number exists in customer_interaction.inventory
+         // partNumber exists in customer_interaction_db.inventory
          if (response.data[0]) {
             api.put('customer_interaction/inventory/update', {
                number: partNumber,
@@ -140,6 +166,7 @@ const Receiving = () => {
             }).catch((error) => {
                console.error(error);
             });
+         // add partNumber to a new row since it does not exist there
          } else {
             api.post('customer_interaction/inventory/create', {
                number: partNumber,

@@ -6,10 +6,12 @@ const db = require('../login_db');
 router.use(express.json());
 router.use(cors());
 
+// for verbosity
 router.get('/', (req, res) => {
   res.send('root of position table operations\n');
 });
 
+// add a row to position
 router.post("/create", (req, res) => {
    const position_description = req.body.position_description
    db.query(
@@ -25,6 +27,7 @@ router.post("/create", (req, res) => {
    );
 });
 
+// get all rows and columns from position
 router.get("/all", (req, res) => {
    db.query(
       "SELECT * FROM position", (err, result) => {
@@ -36,6 +39,7 @@ router.get("/all", (req, res) => {
    });
 });
 
+// get all columns from position at a specific row given by position_id
 router.get("/select/:id", (req, res) => {
    const id = req.params.id;
    db.query(
@@ -50,6 +54,7 @@ router.get("/select/:id", (req, res) => {
    });
 });
 
+// replace description at row in position given by position_id
 router.put("/update", (req, res) => {
    const id = req.body.id;
    const position_description = req.body.position_description;
@@ -66,6 +71,7 @@ router.put("/update", (req, res) => {
    );
 });
 
+// delete row in position given by position_id
 router.delete("/delete/:id", (req, res) => {
    const id = req.params.id;
    db.query(
